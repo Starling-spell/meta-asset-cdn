@@ -19,6 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               Meta<span className="text-accent">Asset</span>
             </Link>
             <div className="flex gap-2 text-sm">
+              <Link href="/docs" className="btn-ghost">
+                Why MetaAsset
+              </Link>
               <Link href="/creator" className="btn-ghost">
                 Creator Portal
               </Link>
