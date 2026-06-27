@@ -33,6 +33,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     return Response.json({ owner: ownerAddress, blobName, contentHash, sizeBytes: bytes.byteLength });
   } catch (err) {
-    return new Response(err instanceof Error ? err.message : String(err), { status: 500 });
+    console.error("[shelby upload] failed:", err);
+    return new Response(err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err), { status: 500 });
   }
 }
