@@ -62,19 +62,19 @@ Other scripts: `pnpm build`, `pnpm typecheck`, `pnpm lint` (all via Turborepo).
 
 ## Deploy to Vercel
 
-Import the repo at [vercel.com/new](https://vercel.com/new). [vercel.json](vercel.json) drives the
-build, so the **Root Directory must stay at the repo root** (leave it blank / `./` — do NOT set it to
-`apps/web`).
+Import the repo at [vercel.com/new](https://vercel.com/new) and set **Root Directory = `apps/web`**.
+[vercel.json](vercel.json) supplies the rest:
 
-| Setting | Value (from vercel.json) |
+| Setting | Value |
 | --- | --- |
-| Root Directory | `./` (repo root) |
-| Install | `pnpm install` |
+| Root Directory | `apps/web` |
+| Install | `pnpm install` (runs at the workspace root) |
 | Build | `turbo run build --filter=@meta-asset/web` |
-| Output | `apps/web/.next` |
+| Output | `.next` (relative to `apps/web`) |
 
-> ⚠️ If you set Root Directory to `apps/web`, the build runs from inside that folder and the output
-> path resolves to `apps/web/apps/web/.next` → "output directory not found". Keep it at the root.
+`turbo` is invoked from inside `apps/web` and walks up to the repo-root `turbo.json`, building the web
+app plus its workspace deps. Output lands in `apps/web/.next`, which `outputDirectory: ".next"` resolves
+to correctly under the `apps/web` root.
 
 It deploys and runs **out of the box** in mock mode (no env vars) — pages render and the upload demo
 returns a mock BlobID. To enable the real integrations, add these Environment Variables in the Vercel
