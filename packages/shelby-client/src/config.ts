@@ -14,6 +14,11 @@ export const ShelbyConfigSchema = z.object({
   rpcUrl: z.string().url().optional(),
   /** Server-only API key, if the RPC requires one. */
   apiKey: z.string().optional(),
+  /**
+   * Base path of the app's own Shelby API routes (server-side proxy that talks to the
+   * real SDK with a funded account). The browser `real` client calls these.
+   */
+  apiBaseUrl: z.string().default("/api/shelby"),
 });
 
 export type ShelbyConfig = z.infer<typeof ShelbyConfigSchema>;
@@ -28,6 +33,7 @@ export function resolveConfig(overrides?: Partial<ShelbyConfig>): ShelbyConfig {
     rpcUrl: process.env.NEXT_PUBLIC_SHELBY_RPC_URL,
     // Only present server-side; undefined in the browser bundle.
     apiKey: process.env.SHELBY_API_KEY,
+    apiBaseUrl: process.env.NEXT_PUBLIC_SHELBY_API_BASE,
   };
 
   return ShelbyConfigSchema.parse({ ...fromEnv, ...overrides });

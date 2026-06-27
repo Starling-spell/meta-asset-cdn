@@ -61,6 +61,8 @@ export function UploadAsset() {
       const shelby = getShelby();
       const result = await shelby.upload(file, {
         contentType: file.type || "model/gltf-binary",
+        // On the real network the blob is addressed by (owner, blobName); use the asset key.
+        blobName: assetKey.trim() || file.name,
         signal: controller.signal,
         onProgress: (p) => setPhase({ status: "uploading", fraction: p.fraction }),
       });

@@ -11,19 +11,18 @@ Creator ──upload──▶ Shelby ──BlobID──▶ Aptos Registry ◀─
                                                                         └─read──▶ Shelby RPC node
 ```
 
-## ⚠️ Status of the Shelby SDK integration
+## Shelby integration
 
-The packages `@shelby-protocol/sdk` and `@shelby-protocol/cross-chain-accounts`, the `BlobID` format,
-and exact method signatures are **not yet publicly verifiable**. Shelby is real (Aptos Labs + Jump
-Crypto), but this scaffold infers the SDK surface from the public docs. To stay honest and runnable:
+Wired against the real, published `@shelby-protocol/sdk` (v0.3.1). Two modes behind one typed adapter
+in [`packages/shelby-client`](packages/shelby-client):
 
-- Every Shelby call is isolated behind a typed **adapter** in [`packages/shelby-client`](packages/shelby-client).
-- A **mock client** (default) makes the whole app run end-to-end with zero credentials.
-- The real-SDK impl ([`realClient.ts`](packages/shelby-client/src/realClient.ts)) and the cross-chain
-  resolver ([`crossChain.ts`](apps/web/src/lib/crossChain.ts)) mark every inferred call with
-  `// SHELBY INTEGRATION POINT — verify against official docs`.
+- **`mock`** (default) — in-memory client; the whole app runs end-to-end with zero credentials.
+- **`real`** — on-chain. Uploads/reads go through the app's `/api/shelby/*` routes, which run the SDK
+  server-side with a funded Aptos service account (signs commitments + pays storage via the Shelby
+  micropayment channel). See [Going live](#going-live-with-real-shelby-on-chain).
 
-When the real SDK is confirmed, you adapt **those files only**; nothing else in the app changes.
+Switch with `NEXT_PUBLIC_SHELBY_MODE`. App code only ever imports `@meta-asset/shelby-client` — never
+the SDK directly — so the boundary stays in one place.
 
 ## Layout
 
@@ -52,13 +51,33 @@ pnpm dev
 
 Other scripts: `pnpm build`, `pnpm typecheck`, `pnpm lint` (all via Turborepo).
 
-### Going live with real Shelby
+### Going live with real Shelby (on-chain)
 
-1. `cp apps/web/.env.example apps/web/.env.local` and set `NEXT_PUBLIC_SHELBY_MODE=real` +
-   `NEXT_PUBLIC_SHELBY_RPC_URL`.
-2. Install the real SDK: `pnpm --filter @meta-asset/shelby-client add @shelby-protocol/sdk`.
-3. Reconcile the `SHELBY INTEGRATION POINT` markers in `realClient.ts` / `crossChain.ts` with the
-   confirmed API.
+Real mode is **fully wired** to `@shelby-protocol/sdk`. Uploads are on-chain: a server-held Aptos
+service account signs blob commitments on Aptos and pays for storage (ShelbyUSD) via the micropayment
+channel. Because that needs a private key, the SDK runs **only server-side** — the browser calls the
+app's `/api/shelby/*` routes ([upload](apps/web/src/app/api/shelby/upload/route.ts),
+[download](apps/web/src/app/api/shelby/download/route.ts)), which use
+[src/server/shelby.ts](apps/web/src/server/shelby.ts).
+
+A Shelby blob is addressed by **(owner account address, blobName)**; the app encodes that pair as the
+registry `BlobID` string `"<owner>/<blobName>"`.
+
+To enable it:
+
+1. Create + **fund** an Aptos account on the target network (APT for gas, ShelbyUSD for storage). The
+   SDK exposes `fundAccountWith{APT,ShelbyUSD}` and a faucet for `shelbynet`.
+2. Set env (see [.env.example](apps/web/.env.example)) — server-side, never `NEXT_PUBLIC_`:
+   - `NEXT_PUBLIC_SHELBY_MODE=real`
+   - `SHELBY_SIGNER_PRIVATE_KEY=0x…` (the funded account)
+   - `SHELBY_NETWORK=shelbynet` (or `testnet` / `local`)
+3. Deploy. Uploads in the Creator Portal now write real blobs on-chain and log the `BlobID` to the
+   Aptos registry; the Game Client streams them back through `/api/shelby/download`.
+
+> The cross-chain account resolution for *paid reads* by non-Aptos wallets
+> (`resolveShelbyAccount` in [crossChain.ts](apps/web/src/lib/crossChain.ts)) is still a stub — reads
+> currently go through the server service account. Wire `@shelby-protocol/cross-chain-accounts` there
+> when you want EVM/Solana wallets to pay for their own reads.
 
 ## Deploy to Vercel
 

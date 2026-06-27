@@ -45,6 +45,11 @@ export interface UploadOptions {
    * with correct headers on read.
    */
   readonly contentType?: string;
+  /**
+   * Blob name / path on Shelby (e.g. "studioX/hero_mesh.glb"). On the real network a
+   * blob is addressed by (owner account, blobName). Defaults to a hash-derived name.
+   */
+  readonly blobName?: string;
   /** Invoked as chunks are uploaded and erasure-coded. */
   readonly onProgress?: (progress: UploadProgress) => void;
   /** Abort an in-flight upload. */

@@ -10,110 +10,90 @@ import {
 } from "./types";
 
 /**
- * ============================================================================
- *  THE Shelby integration boundary.
- * ============================================================================
+ * Real Shelby client (browser side).
  *
- * This is the ONLY file that talks to `@shelby-protocol/sdk`. Everything below the
- * line marked "SHELBY INTEGRATION POINT" is our best-effort mapping from the public
- * Shelby docs onto a plausible SDK surface. The exact method names, argument shapes,
- * and return types are **not yet publicly verifiable** — when you have the real SDK,
- * adjust *this file only*. The rest of Meta-Asset depends solely on {@link ShelbyClient}.
+ * On the real network, uploads are signed and paid for by a funded Aptos account — that
+ * private key must never reach the browser. So this client does NOT import
+ * `@shelby-protocol/sdk` directly. Instead it calls the app's own server routes
+ * (`/api/shelby/*`), which run the real SDK with a server-held service account. See
+ * `apps/web/src/app/api/shelby/*` and `apps/web/src/server/shelby.ts`.
  *
- * To keep the monorepo compiling whether or not the package is installed, we:
- *   1. declare a minimal structural type for the SDK we expect, and
- *   2. import it dynamically (so it's an optional peer dependency).
+ * A Shelby blob is addressed by (owner account address, blobName). We encode that pair
+ * into our opaque {@link BlobID} as `"<owner>/<blobName>"` (owner is a 0x-hex address with
+ * no slash, so the first "/" is the delimiter; blobName may itself contain slashes).
  */
-
-/**
- * Minimal *expected* shape of the Shelby SDK. Replace with `import type` from
- * `@shelby-protocol/sdk` once the real types are published and confirmed.
- *
- * SHELBY INTEGRATION POINT — verify every member against official docs.
- */
-interface ExpectedShelbySdk {
-  createClient(opts: { rpcUrl: string; apiKey?: string }): ExpectedShelbySdkClient;
-}
-
-interface ExpectedShelbySdkClient {
-  /** Upload bytes; expected to chunk + erasure-code internally and return a blob id. */
-  putBlob(
-    data: Uint8Array | Blob,
-    opts?: { contentType?: string; onProgress?: (uploaded: number, total: number) => void; signal?: AbortSignal },
-  ): Promise<{ blobId: string; contentHash: string; size: number }>;
-
-  /** Fetch bytes for a blob id from the nearest RPC node. */
-  getBlob(blobId: string, opts?: { signal?: AbortSignal; authorization?: unknown }): Promise<Blob>;
-
-  /** Build a direct/edge-cacheable read URL (may embed a short-lived token). */
-  blobUrl(blobId: string): string;
-}
-
 export class RealShelbyClient implements ShelbyClient {
-  private clientPromise: Promise<ExpectedShelbySdkClient> | null = null;
+  private readonly base: string;
 
-  constructor(private readonly config: ShelbyConfig) {
-    if (!config.rpcUrl) {
-      throw new Error(
-        "RealShelbyClient requires NEXT_PUBLIC_SHELBY_RPC_URL. Set SHELBY_MODE=mock to run without it.",
-      );
-    }
-  }
-
-  /** Lazily load + construct the SDK client so it's a truly optional dependency. */
-  private async getSdkClient(): Promise<ExpectedShelbySdkClient> {
-    if (!this.clientPromise) {
-      this.clientPromise = (async () => {
-        // SHELBY INTEGRATION POINT — confirm the package name + named exports.
-        // Using a variable specifier keeps the type-checker from requiring the
-        // package to be installed at build time of this scaffold.
-        const specifier = "@shelby-protocol/sdk";
-        const sdk = (await import(/* webpackIgnore: true */ /* @vite-ignore */ specifier)) as unknown as ExpectedShelbySdk;
-        return sdk.createClient({ rpcUrl: this.config.rpcUrl!, apiKey: this.config.apiKey });
-      })();
-    }
-    return this.clientPromise;
+  constructor(config: ShelbyConfig) {
+    this.base = (config.apiBaseUrl ?? "/api/shelby").replace(/\/$/, "");
   }
 
   async upload(data: Blob | File, options?: UploadOptions): Promise<UploadResult> {
     const start = performance.now();
-    const client = await this.getSdkClient();
 
-    // SHELBY INTEGRATION POINT — map our UploadOptions onto the real putBlob signature.
-    const res = await client.putBlob(data, {
-      contentType: options?.contentType ?? (data instanceof File ? data.type : undefined),
+    const form = new FormData();
+    form.append("file", data);
+    if (options?.blobName) form.append("blobName", options.blobName);
+    if (options?.contentType) form.append("contentType", options.contentType);
+
+    const res = await fetch(`${this.base}/upload`, {
+      method: "POST",
+      body: form,
       signal: options?.signal,
-      onProgress: (uploaded, total) =>
-        options?.onProgress?.({ uploadedBytes: uploaded, totalBytes: total, fraction: total ? uploaded / total : 0 }),
     });
+    if (!res.ok) throw new Error(await errorText(res, "upload"));
+
+    const json = (await res.json()) as {
+      owner: string;
+      blobName: string;
+      contentHash: string;
+      sizeBytes: number;
+    };
+
+    // The progress API can't reflect a single server round-trip; emit a final tick.
+    options?.onProgress?.({ uploadedBytes: json.sizeBytes, totalBytes: json.sizeBytes, fraction: 1 });
 
     return {
-      blobId: asBlobId(res.blobId),
-      contentHash: res.contentHash,
-      sizeBytes: res.size,
+      blobId: encodeBlobId(json.owner, json.blobName),
+      contentHash: json.contentHash,
+      sizeBytes: json.sizeBytes,
       elapsedMs: Math.round(performance.now() - start),
     };
   }
 
   async read(blobId: BlobID, options?: ReadOptions): Promise<ReadResult> {
     const start = performance.now();
-    const client = await this.getSdkClient();
+    const res = await fetch(this.getReadUrl(blobId), { signal: options?.signal });
+    if (!res.ok) throw new Error(await errorText(res, "download"));
 
-    // SHELBY INTEGRATION POINT — paid reads may require passing the resolved
-    // cross-chain account/authorization here. Confirm the read-auth contract.
-    const blob = await client.getBlob(blobId, {
-      signal: options?.signal,
-      authorization: options?.account?.authorization,
-    });
-
+    const blob = await res.blob();
     return { blob, blobId, latencyMs: Math.round(performance.now() - start) };
   }
 
   getReadUrl(blobId: BlobID): string {
-    // NOTE: synchronous by contract; if the real SDK needs async URL signing,
-    // precompute/caches the URL after upload instead of here.
-    // SHELBY INTEGRATION POINT — confirm whether read URLs are signed/expiring.
-    if (!this.config.rpcUrl) return `shelby://blob/${blobId}`;
-    return `${this.config.rpcUrl.replace(/\/$/, "")}/blobs/${blobId}`;
+    const { owner, blobName } = decodeBlobId(blobId);
+    const qs = new URLSearchParams({ owner, blobName });
+    return `${this.base}/download?${qs.toString()}`;
   }
+}
+
+function encodeBlobId(owner: string, blobName: string): BlobID {
+  return asBlobId(`${owner}/${blobName}`);
+}
+
+function decodeBlobId(blobId: BlobID): { owner: string; blobName: string } {
+  const slash = blobId.indexOf("/");
+  if (slash <= 0) throw new Error(`Malformed Shelby BlobID: "${blobId}" (expected "<owner>/<blobName>")`);
+  return { owner: blobId.slice(0, slash), blobName: blobId.slice(slash + 1) };
+}
+
+async function errorText(res: Response, op: string): Promise<string> {
+  let detail = "";
+  try {
+    detail = await res.text();
+  } catch {
+    /* ignore */
+  }
+  return `Shelby ${op} failed (${res.status} ${res.statusText})${detail ? `: ${detail}` : ""}`;
 }
