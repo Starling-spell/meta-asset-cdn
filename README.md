@@ -62,12 +62,14 @@ Other scripts: `pnpm build`, `pnpm typecheck`, `pnpm lint` (all via Turborepo).
 
 ## Deploy to Vercel
 
-The repo is Vercel-ready via [vercel.json](vercel.json) (pnpm + Turborepo monorepo). Import the repo
-at [vercel.com/new](https://vercel.com/new) — no manual settings needed:
+Import the repo at [vercel.com/new](https://vercel.com/new). Vercel natively supports a Next.js app in
+a pnpm-workspace monorepo — the only setting that matters:
 
-- **Install:** `pnpm install --frozen-lockfile` (Vercel runs pnpm via the `packageManager` field)
-- **Build:** `turbo run build --filter=@meta-asset/web`
-- **Output:** `apps/web/.next`
+- **Root Directory:** `apps/web`  ← set this in the import screen
+
+Leave everything else on auto-detect (Framework: Next.js, Install: `pnpm install`, Build: `next build`,
+Output: `.next`). Vercel installs the whole workspace from the repo root and resolves the
+`@meta-asset/*` packages automatically. No `vercel.json` needed.
 
 It deploys and runs **out of the box** in mock mode (no env vars) — pages render and the upload demo
 returns a mock BlobID. To enable the real integrations, add these Environment Variables in the Vercel
