@@ -21,6 +21,15 @@ function Milestone({ pct, title, children }: { pct: number; title: string; child
   );
 }
 
+function Row({ k, v, mono, accent }: { k: string; v: string; mono?: boolean; accent?: boolean }) {
+  return (
+    <div className="flex gap-2 border-b border-white/5 py-1">
+      <dt className="w-28 shrink-0 text-zinc-500">{k}</dt>
+      <dd className={`${mono ? "font-mono break-all" : ""} ${accent ? "text-accent2" : "text-zinc-200"}`}>{v}</dd>
+    </div>
+  );
+}
+
 function Code({ children }: { children: string }) {
   return (
     <pre className="overflow-x-auto rounded-xl border border-white/10 bg-black/40 p-4 text-xs leading-relaxed text-zinc-200">
@@ -185,6 +194,54 @@ loadIntoEngine(URL.createObjectURL(blob));  // three.js / model-viewer
               <li>Sub-second loads, no single point of failure</li>
             </ul>
           </div>
+        </div>
+      </section>
+
+      {/* Proof */}
+      <section className="card space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex h-6 items-center rounded-full border border-accent2/40 bg-accent2/10 px-2 text-xs font-medium text-accent2">
+            ✓ Verified on-chain
+          </span>
+          <h2 className="text-xl font-semibold">This isn&apos;t a mock — it ran on shelbynet</h2>
+        </div>
+        <p className="text-sm text-zinc-400">
+          A blob was uploaded on-chain (commitments signed on Aptos, storage paid via the micropayment
+          channel), then read back and byte-verified. Run of 2026-06-27:
+        </p>
+        <dl className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+          <Row k="Network" v="shelbynet" />
+          <Row k="Upload time" v="9,865 ms (incl. erasure coding + commitment)" />
+          <Row k="Download time" v="651 ms (hot read)" />
+          <Row k="Integrity" v="SHA-256 match — bytes identical" accent />
+          <Row k="SHA-256" v="b1e53ebf…35cb0a" mono />
+          <Row k="Owner" v="0xf824…45d0" mono />
+        </dl>
+        <div className="flex flex-wrap gap-2 pt-1">
+          <a
+            className="btn-ghost text-sm"
+            target="_blank"
+            rel="noreferrer"
+            href="https://explorer.shelby.xyz/shelbynet/account/0xf824bab2436e7f5f5fd46fc1de54be5af55fa15a75dafbb8c5a21d8d9b0745d0/blobs"
+          >
+            View blobs on Shelby Explorer ↗
+          </a>
+          <a
+            className="btn-ghost text-sm"
+            target="_blank"
+            rel="noreferrer"
+            href="https://explorer.aptoslabs.com/account/0xf824bab2436e7f5f5fd46fc1de54be5af55fa15a75dafbb8c5a21d8d9b0745d0?network=shelbynet"
+          >
+            View account on Aptos ↗
+          </a>
+          <a
+            className="btn-ghost text-sm"
+            target="_blank"
+            rel="noreferrer"
+            href="https://github.com/Starling-spell/meta-asset-cdn/blob/main/docs/PROOFS.md"
+          >
+            Full proof log ↗
+          </a>
         </div>
       </section>
 

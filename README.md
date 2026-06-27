@@ -12,6 +12,7 @@ Creator ──upload──▶ Shelby ──BlobID──▶ Aptos Registry ◀─
 ```
 
 📖 Full architecture walkthrough with source links: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+✅ Verified on-chain (shelbynet) upload + byte-checked read: [docs/PROOFS.md](docs/PROOFS.md).
 
 ## Shelby integration
 
