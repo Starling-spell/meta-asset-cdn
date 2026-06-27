@@ -13,7 +13,7 @@
 import { useCallback, useState } from "react";
 import type { BlobID } from "@meta-asset/shelby-client";
 import { connectEvm, connectSolana, type ResolvedAccount, type SupportedChain } from "@/lib/crossChain";
-import { verifyOwnership } from "@/lib/nftGates";
+import { verifyOwnership } from "@/lib/verifyOwnership";
 import { formatBytes, getRegistry, getShelby } from "@/lib/meta-asset";
 
 interface FetchedAsset {
