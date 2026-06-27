@@ -1,0 +1,19 @@
+[package]
+name = "asset_registry"
+version = "0.1.0"
+authors = ["Meta-Asset"]
+
+[addresses]
+# The address that publishes the module and owns the on-chain Registry resource.
+# Left unbound here; provide it at publish time, e.g.:
+#   aptos move publish --named-addresses meta_asset=0x<your-account>
+meta_asset = "_"
+
+[dev-addresses]
+# Bound only for `aptos move compile`/`test` so the package builds locally without flags.
+meta_asset = "0xCAFE"
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-core.git"
+rev = "mainnet"
+subdir = "aptos-move/framework/aptos-framework"

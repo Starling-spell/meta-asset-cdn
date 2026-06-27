@@ -1,0 +1,23 @@
+{
+  "name": "meta-asset",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Meta-Asset — a universal high-speed decentralized CDN for Web3 game studios, built on the Shelby Protocol (Aptos).",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rimraf node_modules"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "rimraf": "^6.0.1",
+    "turbo": "^2.1.3",
+    "typescript": "^5.6.2"
+  }
+}

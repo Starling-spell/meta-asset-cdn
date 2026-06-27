@@ -1,0 +1,31 @@
+{
+  "name": "@meta-asset/registry-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Typed client for the Meta-Asset Asset Registry Move contract on Aptos: read/write the asset-key → Shelby BlobID mapping.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "clean": "rimraf dist .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@aptos-labs/ts-sdk": "5.2.1",
+    "@meta-asset/shelby-client": "workspace:*",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@meta-asset/tsconfig": "workspace:*",
+    "@types/node": "^22.7.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.6.2"
+  }
+}

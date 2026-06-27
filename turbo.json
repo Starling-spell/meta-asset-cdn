@@ -1,0 +1,33 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalEnv": [
+    "NODE_ENV",
+    "NEXT_PUBLIC_SHELBY_MODE",
+    "NEXT_PUBLIC_SHELBY_RPC_URL",
+    "NEXT_PUBLIC_APTOS_NETWORK",
+    "NEXT_PUBLIC_REGISTRY_ADDRESS",
+    "NEXT_PUBLIC_EVM_RPC_URL",
+    "NEXT_PUBLIC_SOLANA_RPC_URL",
+    "SHELBY_API_KEY"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}
