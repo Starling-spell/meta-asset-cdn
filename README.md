@@ -62,14 +62,19 @@ Other scripts: `pnpm build`, `pnpm typecheck`, `pnpm lint` (all via Turborepo).
 
 ## Deploy to Vercel
 
-Import the repo at [vercel.com/new](https://vercel.com/new). Vercel natively supports a Next.js app in
-a pnpm-workspace monorepo — the only setting that matters:
+Import the repo at [vercel.com/new](https://vercel.com/new). [vercel.json](vercel.json) drives the
+build, so the **Root Directory must stay at the repo root** (leave it blank / `./` — do NOT set it to
+`apps/web`).
 
-- **Root Directory:** `apps/web`  ← set this in the import screen
+| Setting | Value (from vercel.json) |
+| --- | --- |
+| Root Directory | `./` (repo root) |
+| Install | `pnpm install` |
+| Build | `turbo run build --filter=@meta-asset/web` |
+| Output | `apps/web/.next` |
 
-Leave everything else on auto-detect (Framework: Next.js, Install: `pnpm install`, Build: `next build`,
-Output: `.next`). Vercel installs the whole workspace from the repo root and resolves the
-`@meta-asset/*` packages automatically. No `vercel.json` needed.
+> ⚠️ If you set Root Directory to `apps/web`, the build runs from inside that folder and the output
+> path resolves to `apps/web/apps/web/.next` → "output directory not found". Keep it at the root.
 
 It deploys and runs **out of the box** in mock mode (no env vars) — pages render and the upload demo
 returns a mock BlobID. To enable the real integrations, add these Environment Variables in the Vercel
