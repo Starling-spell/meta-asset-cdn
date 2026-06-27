@@ -11,6 +11,8 @@ Creator ──upload──▶ Shelby ──BlobID──▶ Aptos Registry ◀─
                                                                         └─read──▶ Shelby RPC node
 ```
 
+📖 Full architecture walkthrough with source links: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ## Shelby integration
 
 Wired against the real, published `@shelby-protocol/sdk` (v0.3.1). Two modes behind one typed adapter
