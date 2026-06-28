@@ -8,20 +8,64 @@
 
 body {
   @apply bg-ink text-zinc-100 antialiased;
+  /* Soft brand glows in the corners for depth. */
+  background-image:
+    radial-gradient(60rem 60rem at 110% -10%, rgba(124, 92, 255, 0.12), transparent 60%),
+    radial-gradient(50rem 50rem at -10% 10%, rgba(22, 224, 189, 0.1), transparent 55%);
+  background-attachment: fixed;
 }
 
-.card {
-  @apply rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur;
-}
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-xl backdrop-blur;
+  }
+  .card-hover {
+    @apply transition hover:border-accent/50 hover:bg-white/[0.06];
+  }
 
-.btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2 font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40;
-}
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2 font-medium text-white shadow-lg shadow-accent/20 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 px-4 py-2 font-medium text-zinc-200 transition hover:border-white/30 hover:bg-white/5;
+  }
 
-.btn-ghost {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 px-4 py-2 font-medium transition hover:bg-white/5;
-}
+  /* Nav links */
+  .nav-link {
+    @apply rounded-lg px-3 py-1.5 text-sm text-zinc-400 transition hover:bg-white/5 hover:text-zinc-100;
+  }
+  .nav-link-active {
+    @apply bg-white/10 text-zinc-100;
+  }
 
-.mono {
-  @apply font-mono text-sm break-all;
+  /* Pills / badges */
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium;
+  }
+  .badge-accent {
+    @apply border-accent/40 bg-accent/10 text-accent;
+  }
+  .badge-accent2 {
+    @apply border-accent2/40 bg-accent2/10 text-accent2;
+  }
+
+  /* Numbered step bubble */
+  .step-num {
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-accent/40 bg-accent/10 font-mono text-sm text-accent;
+  }
+
+  .mono {
+    @apply font-mono text-sm break-all;
+  }
+
+  kbd {
+    @apply rounded-md border border-white/15 bg-white/10 px-1.5 py-0.5 font-mono text-xs;
+  }
+
+  .prose-doc {
+    @apply text-sm leading-relaxed text-zinc-400;
+  }
+  .prose-doc code {
+    @apply rounded bg-white/10 px-1 py-0.5 font-mono text-[0.8em] text-zinc-200;
+  }
 }
